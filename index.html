@@ -15,9 +15,21 @@
   <body>
     <h1>Socket.IO Whiteboard</h1>
     <canvas id="my-canvas"></canvas>    
-    <script> 
-      var socket = io(),
-          $_canvas = $("#my-canvas"),
+    <script>
+      /*
+      // Socket
+      */
+      var socket = io();
+
+      socket.on('broadcastStrokes',function(data){
+        console.log('broadcastStrokes');
+        console.log(data);
+      });
+
+      /*
+      // Canvas
+      */ 
+      var $_canvas = $("#my-canvas"),
           $_context = $_canvas[0].getContext('2d'),
           painting = false,
           strokes = [],          

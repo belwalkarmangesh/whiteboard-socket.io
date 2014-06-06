@@ -12,6 +12,7 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
   // 設定socket初始狀態
   socket.user_id = room.length;
+  room.push(socket);
   console.log('User ' + socket.user_id + ' is connected.');
 
   socket.on('pushStrokes', function (data) {
