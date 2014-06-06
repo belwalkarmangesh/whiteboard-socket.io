@@ -19,7 +19,8 @@
       /*
       // Socket
       */
-      var socket = io();
+      var socket = io(),
+          strokes_buffer = [];
 
       socket.on('broadcastStrokes',function(data){
         console.log('broadcastStrokes');
