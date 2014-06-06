@@ -1,0 +1,12 @@
+{
+  "name": "whiteboard-socket.io",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "*",
+    "socket.io": "1.0",
+    "sugar": "*",
+    "grunt": "~0.4.2",
+    "grunt-nodemon": "*"
+  }
+}
