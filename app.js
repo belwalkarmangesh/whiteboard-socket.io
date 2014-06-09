@@ -13,15 +13,14 @@ io.on('connection', function(socket){
   // 設定socket初始狀態
   socket.user_id = room.length;
   console.log('User ' + socket.user_id + ' is connected.');
+  room.push(socket);
 
-  socket.on('pushStrokes', function (data) {
-    socket.broadcast.emit('broadcastStrokes',{
-      new_strokes: data,
-      id: this.user_id
-    });        
+  socket.on('pushStroke', function (data) {
+    room.strokes = room.strokes.concat(data);    
+    socket.broadcast.emit('broadcastStroke',data);        
   });
 });
 
 http.listen(3000, function(){
-  console.log('listening on *:3000');
+  console.log('listening on port 3000');
 });

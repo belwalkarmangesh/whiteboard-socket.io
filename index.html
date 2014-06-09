@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO Whiteboard</title>
+    <title>Socket.IO Collaborative Whiteboard</title>
     <style>
       #my-canvas{
         width: 800px;
@@ -15,110 +15,109 @@
   <body>
     <h1>Socket.IO Whiteboard</h1>
     <canvas id="my-canvas"></canvas>    
-    <script> 
-      var socket = io(),
-          $_canvas = $("#my-canvas"),
-          $_context = $_canvas[0].getContext('2d'),
-          painting = false,
-          strokes = [],          
-          Dot = function(args){
-            this.X = args.x || -1;
-            this.Y = args.y || -1;
-            this.dragging = args.dragging || false;
-            this.end = args.end || false;            
-            this.text = args.text || false;            
-          },
-          addDot = function(args){
-            strokes.push(new Dot(args));
-            // flySocket.strokePush(getLatestStrokes());
-          },
-          redraw = function(){
-            $_context.clearRect(0, 0, $_context.canvas.width, $_context.canvas.height); // Clears the canvas
-            // Do this user's strokes
-            draw(strokes);            
-            // // Do other users' pointer in this clasroom
-            // classroom.each(function(user){
-            //   drawPointer(user.pointer);
-            // });
-          },
-          draw = function(strokes){ 
-            var i;
-            for(i = 0; i < strokes.length; i = i + 1){              
-              // 一般筆畫起點
-              if (!strokes[i].dragging){            
-                $_context.beginPath();
-                $_context.globalCompositeOperation = "source-over";
-                $_context.strokeStyle = "rgba(0,0,0,1)";
-                $_context.lineJoin = "round";
-                $_context.lineWidth = 3;
-                $_context.moveTo(strokes[i].X, strokes[i].Y); 
-              } else {
-                // 一般筆畫拖曳中
-                $_context.lineTo(strokes[i].X, strokes[i].Y);              
-                if (i === strokes.length - 1 || !strokes[i + 1].dragging){
-                  // 一般筆畫終點
-                  $_context.strokeStyle=strokes[i].color;                
-                  $_context.stroke();
-                }             
-              }                                           
-            }
-          };
+    <script>
+      var whiteboardControl =  ( function() { 
+        var $_canvas = $("#my-canvas"),
+            $_context = $_canvas[0].getContext('2d'),
+            painting = false,
+            strokes = [],          
+            Dot = function(args){
+              this.X = args.x || -1;
+              this.Y = args.y || -1;
+              this.dragging = args.dragging || false;
+              this.end = args.end || false;            
+              this.text = args.text || false;            
+            },
+            addDot = function(args){
+              strokes.push(new Dot(args));
+              socketControl.pushStroke(strokes[strokes.length-1]);              
+            },
+            redraw = function(){
+              $_context.clearRect(0, 0, $_context.canvas.width, $_context.canvas.height); // Clears the canvas
+              draw(strokes);
+            },
+            draw = function(strokes){ 
+              var i;
+              for(i = 0; i < strokes.length; i = i + 1){ 
+                if (!strokes[i].dragging){ // start point                                         
+                  $_context.beginPath();
+                  $_context.globalCompositeOperation = "source-over";
+                  $_context.strokeStyle = "rgba(0,0,0,1)";
+                  $_context.lineJoin = "round";
+                  $_context.lineWidth = 3;
+                  $_context.moveTo(strokes[i].X, strokes[i].Y); 
+                } else {                  
+                  $_context.lineTo(strokes[i].X, strokes[i].Y); // dragging
+                  if (i === strokes.length - 1 || strokes[i + 1].end){ // end point                    
+                    $_context.strokeStyle=strokes[i].color;                
+                    $_context.stroke();
+                  }             
+                }                                           
+              }
+            };       
       
-      $_canvas.attr("width",$_canvas.css('width'));
-      $_canvas.attr("height",$_canvas.css('height'));
-
-      // Events binding
-      $_canvas.mousedown(function(e){
-        var mouseX = e.pageX - $(this).offset().left,
-            mouseY = e.pageY - $(this).offset().top;        
-        // 畫圖
-        painting = true;          
-        addDot({
-          x: mouseX,
-          y: mouseY,
-          dragging: false
+        $_canvas.attr("width",$_canvas.css('width')).attr("height",$_canvas.css('height'));
+        // Events binding
+        $_canvas.mousedown(function(e){
+          var mouseX = e.pageX - $(this).offset().left,
+              mouseY = e.pageY - $(this).offset().top;                  
+          painting = true;          
+          addDot({x: mouseX, y: mouseY, dragging: false});
+          redraw();               
         });
-        redraw();               
-      });
-      $_canvas.mousemove(function(e){
-        var mouseX = e.pageX - $(this).offset().left,
-            mouseY = e.pageY - $(this).offset().top;        
-        if(painting){                      
-          addDot({
-            x: mouseX,
-            y: mouseY,
-            dragging: true
-          });
-          redraw();            
-        }
-        //flySocket.pointerPush(mouseX, mouseY);        
-      });
-      $_canvas.mouseup(function(e){
-        var mouseX = e.pageX - $(this).offset().left,
-            mouseY = e.pageY - $(this).offset().top;
-        if(painting){         
-          addDot({
-            x: mouseX,
-            y: mouseY,
-            dragging: true,
-            end: true
-          });
-        }
-        painting = false;
-      });
-      $_canvas.mouseleave(function(e){
-        var mouseX = e.pageX - $(this).offset().left,
-            mouseY = e.pageY - $(this).offset().top;
-        if (painting){              
-          addDot({
-            x: mouseX,
-            y: mouseY,
-            dragging: true,
-            end: true
-          });
+        $_canvas.mousemove(function(e){
+          var mouseX = e.pageX - $(this).offset().left,
+              mouseY = e.pageY - $(this).offset().top;        
+          if(painting){                      
+            addDot({x: mouseX, y: mouseY, dragging: true});
+            redraw();            
+          }          
+        });
+        $_canvas.mouseup(function(e){
+          var mouseX = e.pageX - $(this).offset().left,
+              mouseY = e.pageY - $(this).offset().top;
+          if(painting){         
+            addDot({x: mouseX, y: mouseY, dragging: true, end: true});
+          }
           painting = false;
-        }        
-      }); 
+        });
+        $_canvas.mouseleave(function(e){
+          var mouseX = e.pageX - $(this).offset().left,
+              mouseY = e.pageY - $(this).offset().top;
+          if (painting){              
+            addDot({
+              x: mouseX,
+              y: mouseY,
+              dragging: true,
+              end: true
+            });
+            painting = false;
+          }        
+        });
+        return{          
+          updateStrokes: function(new_strokes){              
+            strokes = strokes.concat(new_strokes);            
+            redraw();
+          }
+        };
+      })();
+
+      var socketControl =  ( function() {        
+        var socket = io(),
+            strokes_buffer = [];        
+        socket.on('broadcastStroke', function (data) {          
+          whiteboardControl.updateStrokes(data);
+        });
+        return{
+          pushStroke: function(new_stroke){            
+            strokes_buffer.push(new_stroke);
+            if(new_stroke.end){
+              socket.emit('pushStroke',strokes_buffer);
+              strokes_buffer = [];
+            }                        
+          }
+        }
+      })(); 
     </script>
   </body>
 </html>
