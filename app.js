@@ -10,7 +10,6 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', function(socket){
-  // 設定socket初始狀態
   socket.user_id = room.length;
   console.log('User ' + socket.user_id + ' is connected.');
   room.push(socket);
