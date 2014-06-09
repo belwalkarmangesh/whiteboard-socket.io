@@ -30,21 +30,15 @@
             },
             addDot = function(args){
               strokes.push(new Dot(args));
-              socketControl.pushStroke(strokes[strokes.length-1]);              
+              socketControl.pushStroke(strokes[strokes.length-1]);
+              redraw();              
             },
             redraw = function(){
               $_context.clearRect(0, 0, $_context.canvas.width, $_context.canvas.height); // Clears the canvas
-              draw(strokes);
-            },
-            draw = function(strokes){ 
               var i;
               for(i = 0; i < strokes.length; i = i + 1){ 
                 if (!strokes[i].dragging){ // start point                                         
-                  $_context.beginPath();
-                  $_context.globalCompositeOperation = "source-over";
-                  $_context.strokeStyle = "rgba(0,0,0,1)";
-                  $_context.lineJoin = "round";
-                  $_context.lineWidth = 3;
+                  $_context.beginPath();                  
                   $_context.moveTo(strokes[i].X, strokes[i].Y); 
                 } else {                  
                   $_context.lineTo(strokes[i].X, strokes[i].Y); // dragging
@@ -54,23 +48,25 @@
                   }             
                 }                                           
               }
-            };       
+            };                
       
         $_canvas.attr("width",$_canvas.css('width')).attr("height",$_canvas.css('height'));
+        $_context.globalCompositeOperation = "source-over";
+        $_context.strokeStyle = "rgba(0,0,0,1)";
+        $_context.lineJoin = "round";
+        $_context.lineWidth = 3;
         // Events binding
         $_canvas.mousedown(function(e){
           var mouseX = e.pageX - $(this).offset().left,
               mouseY = e.pageY - $(this).offset().top;                  
           painting = true;          
-          addDot({x: mouseX, y: mouseY, dragging: false});
-          redraw();               
+          addDot({x: mouseX, y: mouseY, dragging: false});                        
         });
         $_canvas.mousemove(function(e){
           var mouseX = e.pageX - $(this).offset().left,
               mouseY = e.pageY - $(this).offset().top;        
           if(painting){                      
-            addDot({x: mouseX, y: mouseY, dragging: true});
-            redraw();            
+            addDot({x: mouseX, y: mouseY, dragging: true});            
           }          
         });
         $_canvas.mouseup(function(e){
@@ -78,19 +74,15 @@
               mouseY = e.pageY - $(this).offset().top;
           if(painting){         
             addDot({x: mouseX, y: mouseY, dragging: true, end: true});
+            painting = false;
           }
-          painting = false;
+          
         });
         $_canvas.mouseleave(function(e){
           var mouseX = e.pageX - $(this).offset().left,
               mouseY = e.pageY - $(this).offset().top;
           if (painting){              
-            addDot({
-              x: mouseX,
-              y: mouseY,
-              dragging: true,
-              end: true
-            });
+            addDot({x: mouseX, y: mouseY, dragging: true, end: true });
             painting = false;
           }        
         });

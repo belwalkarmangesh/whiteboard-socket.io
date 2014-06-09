@@ -1,21 +1,13 @@
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var room = [];
-
-room.strokes = [];
+var app = require('express')(),
+    http = require('http').Server(app),
+    io = require('socket.io')(http);
 
 app.get('/', function(req, res){
   res.sendfile('index.html');
 });
 
 io.on('connection', function(socket){
-  socket.user_id = room.length;
-  console.log('User ' + socket.user_id + ' is connected.');
-  room.push(socket);
-
-  socket.on('pushStroke', function (data) {
-    room.strokes = room.strokes.concat(data);    
+  socket.on('pushStroke', function (data) {   
     socket.broadcast.emit('broadcastStroke',data);        
   });
 });
